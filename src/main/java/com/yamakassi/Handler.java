@@ -5,22 +5,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Serializable;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Handler implements Runnable {
+    private static final double MEAN = 7.2;
+    private static final double STD_DEV = 0.6;
     ObjectMapper objectMapper = new ObjectMapper();
     private final Socket socket;
-
 
     public Handler(Socket socket) {
         this.socket = socket;
     }
+
     @Override
     public void run() {
         while (true) {
@@ -29,7 +28,6 @@ public class Handler implements Runnable {
                 String json = generateRandomUserJson();
                 OutputStream outputStream = socket.getOutputStream();
                 System.out.println(json);
-                // json  вида "{"name":"USER", "spend": 1999, "city: "Saratov"}\n"
                 outputStream.write(json.getBytes(StandardCharsets.UTF_8));
                 outputStream.flush();
                 Thread.sleep(1000);
@@ -49,16 +47,16 @@ public class Handler implements Runnable {
         String name = generateUserName();
         String city = generateCity();
         Integer spent = generateSpend();
-        Timestamp timestamp = new Timestamp(new Date().getTime());
+        System.out.println("SPENT:" + spent);
+        Date date = new Date();
         Person person = new Person();
         person.setName(name);
         person.setSpent(spent);
         person.setCity(city);
-        person.setTimestamp(timestamp);
+        person.setTimestamp(date.getTime() / 1000);
         try {
             String json = objectMapper.writeValueAsString(person);
             return json + "\n";
-            // json  вида "{"name":"USER", "spend": 1999, "city: "Saratov", "timestamp": "ddnnyyy"}\n"
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -67,15 +65,7 @@ public class Handler implements Runnable {
     }
 
     private static Integer generateSpend() {
-        // Среднее значение и стандартное отклонение выбраны так, чтобы покрыть диапазон от 1000 до 5000
-        double mean = 4.2;
-        double stdDev = 7;
-        double logNormalRandom = Math.exp(mean + stdDev * ThreadLocalRandom.current().nextGaussian());
-
-        double minSpend = 100.0;
-        double maxSpend = 100000.0;
-
-        //(int) (Math.max(minSpend, Math.min(maxSpend, logNormalRandom)));
+        double logNormalRandom = Math.exp(MEAN + STD_DEV * ThreadLocalRandom.current().nextGaussian());
         return (int) logNormalRandom;
     }
 

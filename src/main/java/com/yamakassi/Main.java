@@ -16,7 +16,7 @@ public class Main {
         ExecutorService executorService = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
         while (true) {
-            System.out.println("Socket server running..");
+            System.out.println("$Socket server running..");
             Socket socket = serverSocket.accept();
             executorService.submit(new Handler(socket));
         }
